@@ -66,7 +66,13 @@ struct CPU {
 		return data;
 	};
 
-	BYTE read(u32& cycles, BYTE address, Memory& mem) {
+	BYTE readByteFromZeroPage(u32& cycles, BYTE address, Memory& mem) {
+		BYTE data = mem[address];
+		cycles--;
+		return data;
+	};
+	
+	BYTE readByte(u32& cycles, WORD address, Memory& mem) {
 		BYTE data = mem[address];
 		cycles--;
 		return data;
@@ -76,6 +82,11 @@ struct CPU {
 		INS_LDA_IM = 0xA9,
 		INS_LDA_ZP = 0xA5,
 		INS_LDA_ZPX = 0xB5,
+		INS_LDA_ABS = 0xAD,
+		INS_LDA_ABSX = 0xBD,
+		INS_LDA_ABSY = 0xB9,
+		INS_LDA_INDX = 0xA1,
+		INS_LDA_INDY = 0xB1,
 		INS_JSR = 0x20;
 
 	void LDASetStatus() {
@@ -94,15 +105,19 @@ struct CPU {
 				} break;
 				case INS_LDA_ZP: {
 					BYTE zeroPageAddress = fetch(cycles, mem);
-					A = read(cycles, zeroPageAddress, mem);
+					A = readByteFromZeroPage(cycles, zeroPageAddress, mem);
 					LDASetStatus();
 				} break;
 				case INS_LDA_ZPX: {
 					BYTE zeroPageAddress = fetch(cycles, mem);
 					zeroPageAddress += A;
 					cycles--;
-					A = read(cycles, zeroPageAddress, mem);
+					A = readByteFromZeroPage(cycles, zeroPageAddress, mem);
 					LDASetStatus();
+				} break;
+				case INS_LDA_ABS: {
+					WORD absAddress = fetchWord(cycles, mem);
+					A = readByte(cycles, absAddress, mem);
 				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
@@ -112,7 +127,7 @@ struct CPU {
 					cycles--;
 				} break;
 				default: {
-					printf("Instruction not handled");
+					printf("Instruction not handled: ", insion);
 				} break;
 			};
 		};
