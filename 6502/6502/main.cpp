@@ -119,6 +119,14 @@ struct CPU {
 					WORD absAddress = fetchWord(cycles, mem);
 					A = readByte(cycles, absAddress, mem);
 				} break;
+				case INS_LDA_ABSX: {
+					WORD absAddress = fetchWord(cycles, mem);
+					WORD absAddressX = absAddress + X;
+					A = readByte(cycles, absAddressX, mem);
+					if (absAddressX - absAddress >= 0xFF) {
+						cycles--;
+					};
+				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
 					mem.writeWord(cycles, PC - 1, SP);
