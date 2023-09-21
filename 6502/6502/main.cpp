@@ -18,6 +18,12 @@ struct Memory{
 	BYTE& operator[](u32 address) {
 		return data[address];
 	};
+
+	void writeWord(u32& cycles, WORD value, u32 address) {
+		data[address] = value & 0xFF;
+		data[address + 1] = (value >> 8);
+		cycles -= 2;
+	};
 };
 
 struct CPU {
@@ -50,6 +56,16 @@ struct CPU {
 		return data;
 	};
 
+	WORD fetchWord(u32& cycles, Memory& mem) {
+		BYTE data = mem[PC];
+		PC++;
+
+		data |= (mem[PC] << 8);
+		PC++;
+		cycles -= 2;
+		return data;
+	};
+
 	BYTE read(u32& cycles, BYTE address, Memory& mem) {
 		BYTE data = mem[address];
 		cycles--;
@@ -59,7 +75,8 @@ struct CPU {
 	static constexpr BYTE
 		INS_LDA_IM = 0xA9,
 		INS_LDA_ZP = 0xA5,
-		INS_LDA_ZPX = 0xB5;
+		INS_LDA_ZPX = 0xB5,
+		INS_JSR = 0x20;
 
 	void LDASetStatus() {
 		Z = (A == 0);
@@ -87,6 +104,13 @@ struct CPU {
 					A = read(cycles, zeroPageAddress, mem);
 					LDASetStatus();
 				} break;
+				case INS_JSR: {
+					WORD subAddress = fetchWord(cycles, mem);
+					mem.writeWord(cycles, PC - 1, SP);
+					SP++;
+					PC = subAddress;
+					cycles--;
+				} break;
 				default: {
 					printf("Instruction not handled");
 				} break;
@@ -100,10 +124,12 @@ int main() {
 	CPU cpu;
 	cpu.reset(mem);
 
-	mem[0xFFFC] = CPU::INS_LDA_ZP;
+	mem[0xFFFC] = CPU::INS_JSR;
 	mem[0xFFFD] = 0x42;
-	mem[0x0042] = 0x84;
+	mem[0xFFFE] = 0x42;
+	mem[0x4242] = CPU::INS_LDA_IM;
+	mem[0x4243] = 0x84;
 
-	cpu.execute(3, mem);
+	cpu.execute(9, mem);
 	return 0;
 };
