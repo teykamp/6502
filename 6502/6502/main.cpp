@@ -148,6 +148,15 @@ struct CPU {
 					WORD effectiveAddress = readWord(cycles, zeroPageAddress, mem);
 					A = readByte(cycles, effectiveAddress, mem);
 				} break;
+				case INS_LDA_INDY: {
+					BYTE zeroPageAddress = fetch(cycles, mem);
+					WORD effectiveAddress = readWord(cycles, zeroPageAddress, mem);
+					WORD effectiveAddressY = effectiveAddress + Y;
+					A = readByte(cycles, effectiveAddressY, mem);
+					if (effectiveAddressY - effectiveAddress >= 0xFF) {
+						cycles--;
+					};
+				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
 					mem.writeWord(cycles, PC - 1, SP);
