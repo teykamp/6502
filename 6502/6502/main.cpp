@@ -144,6 +144,7 @@ struct CPU {
 				case INS_LDA_INDX: {
 					BYTE zeroPageAddress = fetch(cycles, mem);
 					zeroPageAddress += X;
+					cycles--;
 					WORD effectiveAddress = readWord(cycles, zeroPageAddress, mem);
 					A = readByte(cycles, effectiveAddress, mem);
 				} break;
