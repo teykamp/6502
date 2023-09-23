@@ -86,6 +86,8 @@ struct CPU {
 
 	static constexpr BYTE
 		INS_LDA_IM = 0xA9,
+		INS_LDX_IM = 0xA2, // ?
+		INS_LDY_IM = 0xA0, // ?
 		INS_LDA_ZP = 0xA5,
 		INS_LDA_ZPX = 0xB5,
 		INS_LDA_ABS = 0xAD,
@@ -95,9 +97,9 @@ struct CPU {
 		INS_LDA_INDY = 0xB1,
 		INS_JSR = 0x20;
 
-	void LDASetStatus() {
-		Z = (A == 0);
-		N = (A & 0b10000000) > 0;
+	void loadRegisterSetStatus(BYTE reg) {
+		Z = (reg == 0);
+		N = (reg & 0b10000000) > 0;
 	};
 
 	void execute(u32 cycles, Memory& mem) {
@@ -105,25 +107,33 @@ struct CPU {
 			BYTE insion = fetch(cycles, mem);
 			switch (insion) {
 				case INS_LDA_IM: {
-					BYTE value = fetch(cycles, mem);
-					A = value;
-					LDASetStatus();
+					A = fetch(cycles, mem);
+					loadRegisterSetStatus(A);
+				} break;
+				case INS_LDX_IM: {
+					X = fetch(cycles, mem);
+					loadRegisterSetStatus(X);
+				} break;
+				case INS_LDY_IM: {
+					Y = fetch(cycles, mem);
+					loadRegisterSetStatus(Y);
 				} break;
 				case INS_LDA_ZP: {
 					BYTE zeroPageAddress = fetch(cycles, mem);
 					A = readByteFromZeroPage(cycles, zeroPageAddress, mem);
-					LDASetStatus();
+					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_ZPX: {
 					BYTE zeroPageAddress = fetch(cycles, mem);
 					zeroPageAddress += A;
 					cycles--;
 					A = readByteFromZeroPage(cycles, zeroPageAddress, mem);
-					LDASetStatus();
+					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_ABS: {
 					WORD absAddress = fetchWord(cycles, mem);
 					A = readByte(cycles, absAddress, mem);
+					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_ABSX: {
 					WORD absAddress = fetchWord(cycles, mem);
@@ -132,6 +142,7 @@ struct CPU {
 					if (absAddressX - absAddress >= 0xFF) {
 						cycles--;
 					};
+					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_ABSY: {
 					WORD absAddress = fetchWord(cycles, mem);
@@ -140,6 +151,7 @@ struct CPU {
 					if (absAddressX - absAddress >= 0xFF) {
 						cycles--;
 					};
+					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_INDX: {
 					BYTE zeroPageAddress = fetch(cycles, mem);
@@ -147,6 +159,7 @@ struct CPU {
 					cycles--;
 					WORD effectiveAddress = readWord(cycles, zeroPageAddress, mem);
 					A = readByte(cycles, effectiveAddress, mem);
+					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_INDY: {
 					BYTE zeroPageAddress = fetch(cycles, mem);
@@ -156,6 +169,7 @@ struct CPU {
 					if (effectiveAddressY - effectiveAddress >= 0xFF) {
 						cycles--;
 					};
+					loadRegisterSetStatus(A);
 				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
