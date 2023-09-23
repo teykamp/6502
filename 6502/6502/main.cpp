@@ -115,6 +115,13 @@ struct CPU {
 
 	WORD addressZeroPage(u32& cycles, Memory& memory) {
 		BYTE zeroPageAddress = fetch(cycles, memory);
+		zeroPageAddress += X;
+		cycles--;
+		return zeroPageAddress;
+	};
+
+	WORD zeroPageAddressX(u32& cycles, Memory& memory) {
+		BYTE zeroPageAddress = fetch(cycles, memory);
 		return zeroPageAddress;
 	};
 
@@ -150,11 +157,14 @@ struct CPU {
 					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_ZPX: {
-					BYTE zeroPageAddress = fetch(cycles, mem);
-					zeroPageAddress += A;
-					cycles--;
-					A = readByteFromZeroPage(cycles, zeroPageAddress, mem);
+					WORD zeroPageAddressX = addressZeroPage(cycles, mem);
+					A = readByteFromZeroPage(cycles, zeroPageAddressX, mem);
 					loadRegisterSetStatus(A);
+				} break;
+				case INS_LDY_ZPX: {
+					WORD zeroPageAddressX = addressZeroPage(cycles, mem);
+					Y = readByteFromZeroPage(cycles, zeroPageAddressX, mem);
+					loadRegisterSetStatus(Y);
 				} break;
 				case INS_LDA_ABS: {
 					WORD absAddress = fetchWord(cycles, mem);
