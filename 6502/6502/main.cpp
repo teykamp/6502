@@ -130,6 +130,24 @@ struct CPU {
 		return absAddress;
 	};
 
+	WORD addressAbsoluteX(u32& cycles, Memory& memory) {
+		WORD absAddress = fetchWord(cycles, memory);
+		WORD absAddressX = absAddress + X;
+		if (absAddressX - absAddress >= 0xFF) {
+			cycles--;
+		};
+		return absAddressX;
+	};
+
+	WORD addressAbsoluteY(u32& cycles, Memory& memory) {
+		WORD absAddress = fetchWord(cycles, memory);
+		WORD absAddressY = absAddress + Y;
+		if (absAddressY - absAddress >= 0xFF) {
+			cycles--;
+		};
+		return absAddressY;
+	};
+
 	void execute(u32 cycles, Memory& mem) {
 		while (cycles > 0) {
 			BYTE insion = fetch(cycles, mem);
@@ -187,22 +205,24 @@ struct CPU {
 					loadRegisterSetStatus(Y);
 				} break;
 				case INS_LDA_ABSX: {
-					WORD absAddress = fetchWord(cycles, mem);
-					WORD absAddressX = absAddress + X;
+					WORD absAddressX = addressAbsoluteX(cycles, mem);
 					A = readByte(cycles, absAddressX, mem);
-					if (absAddressX - absAddress >= 0xFF) {
-						cycles--;
-					};
 					loadRegisterSetStatus(A);
 				} break;
+				case INS_LDY_ABSX: {
+					WORD absAddressX = addressAbsoluteX(cycles, mem);
+					Y = readByte(cycles, absAddressX, mem);
+					loadRegisterSetStatus(Y);
+				} break;
 				case INS_LDA_ABSY: {
-					WORD absAddress = fetchWord(cycles, mem);
-					WORD absAddressX = absAddress + Y;
-					A = readByte(cycles, absAddressX, mem);
-					if (absAddressX - absAddress >= 0xFF) {
-						cycles--;
-					};
+					WORD absAddressY = addressAbsoluteY(cycles, mem);
+					A = readByte(cycles, absAddressY, mem);
 					loadRegisterSetStatus(A);
+				} break;
+				case INS_LDX_ABSY: {
+					WORD absAddressY = addressAbsoluteY(cycles, mem);
+					X = readByte(cycles, absAddressY, mem);
+					loadRegisterSetStatus(X);
 				} break;
 				case INS_LDA_INDX: {
 					BYTE zeroPageAddress = fetch(cycles, mem);
@@ -216,10 +236,10 @@ struct CPU {
 					BYTE zeroPageAddress = fetch(cycles, mem);
 					WORD effectiveAddress = readWord(cycles, zeroPageAddress, mem);
 					WORD effectiveAddressY = effectiveAddress + Y;
-					A = readByte(cycles, effectiveAddressY, mem);
 					if (effectiveAddressY - effectiveAddress >= 0xFF) {
 						cycles--;
 					};
+					A = readByte(cycles, effectiveAddressY, mem);
 					loadRegisterSetStatus(A);
 				} break;
 				case INS_JSR: {
