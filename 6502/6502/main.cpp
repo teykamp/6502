@@ -86,8 +86,6 @@ struct CPU {
 
 	static constexpr BYTE
 		INS_LDA_IM = 0xA9,
-		INS_LDX_IM = 0xA2, // ?
-		INS_LDY_IM = 0xA0, // ?
 		INS_LDA_ZP = 0xA5,
 		INS_LDA_ZPX = 0xB5,
 		INS_LDA_ABS = 0xAD,
@@ -95,11 +93,29 @@ struct CPU {
 		INS_LDA_ABSY = 0xB9,
 		INS_LDA_INDX = 0xA1,
 		INS_LDA_INDY = 0xB1,
+
+		INS_LDX_IM = 0xA2,
+		INS_LDX_ZP = 0xA6,
+		INS_LDX_ZPY = 0xB6,
+		INS_LDX_ABS = 0xAE,
+		INS_LDX_ABSY = 0xBE,
+
+		INS_LDY_IM = 0xA0,
+		INS_LDY_ZP = 0xA4,
+		INS_LDY_ZPX = 0xB4,
+		INS_LDY_ABS = 0xAC,
+		INS_LDY_ABSX = 0xBC,
+
 		INS_JSR = 0x20;
 
 	void loadRegisterSetStatus(BYTE reg) {
 		Z = (reg == 0);
 		N = (reg & 0b10000000) > 0;
+	};
+
+	WORD addressZeroPage(u32& cycles, Memory& memory) {
+		BYTE zeroPageAddress = fetch(cycles, memory);
+		return zeroPageAddress;
 	};
 
 	void execute(u32 cycles, Memory& mem) {
@@ -119,8 +135,18 @@ struct CPU {
 					loadRegisterSetStatus(Y);
 				} break;
 				case INS_LDA_ZP: {
-					BYTE zeroPageAddress = fetch(cycles, mem);
+					WORD zeroPageAddress = addressZeroPage(cycles, mem);
 					A = readByteFromZeroPage(cycles, zeroPageAddress, mem);
+					loadRegisterSetStatus(A);
+				} break;
+				case INS_LDX_ZP: {
+					WORD zeroPageAddress = addressZeroPage(cycles, mem);
+					X = readByteFromZeroPage(cycles, zeroPageAddress, mem);
+					loadRegisterSetStatus(A);
+				} break;
+				case INS_LDY_ZP: {
+					WORD zeroPageAddress = addressZeroPage(cycles, mem);
+					Y = readByteFromZeroPage(cycles, zeroPageAddress, mem);
 					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_ZPX: {
