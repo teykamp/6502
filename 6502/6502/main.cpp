@@ -77,6 +77,12 @@ struct CPU {
 		cycles--;
 		return data;
 	};
+	
+	WORD readWord(u32& cycles, WORD address, Memory& mem) {
+		BYTE loByte = readByte(cycles, address, mem);
+		BYTE hiBYte = readByte(cycles, address + 1, mem);
+		return loByte | (hiBYte << 8);
+	};
 
 	static constexpr BYTE
 		INS_LDA_IM = 0xA9,
@@ -134,6 +140,12 @@ struct CPU {
 					if (absAddressX - absAddress >= 0xFF) {
 						cycles--;
 					};
+				} break;
+				case INS_LDA_INDX: {
+					BYTE zeroPageAddress = fetch(cycles, mem);
+					zeroPageAddress += X;
+					WORD effectiveAddress = readWord(cycles, zeroPageAddress, mem);
+					A = readByte(cycles, effectiveAddress, mem);
 				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
