@@ -305,10 +305,20 @@ struct CPU {
 					WORD zeroPageAddress = zeroPageAddressX(cycles, mem);
 					writeByte(Y, cycles, zeroPageAddress, mem);
 				} break;
+				case INS_STA_ABSX: {
+					WORD address = addressAbsoluteX(cycles, mem);
+					writeByte(A, cycles, address, mem);
+					cycles--;
+				} break;
+				case INS_STA_ABSY: {
+					WORD address = addressAbsoluteY(cycles, mem);
+					writeByte(A, cycles, address, mem);
+					cycles--;
+				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
 					mem.writeWord(cycles, PC - 1, SP);
-					SP++;
+					SP += 2;
 					PC = subAddress;
 					cycles--;
 				} break;
