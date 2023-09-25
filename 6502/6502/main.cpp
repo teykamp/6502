@@ -3,7 +3,7 @@
 
 using BYTE = unsigned char;
 using WORD = unsigned short;
-using u32 = unsigned int;
+using u32 = unsigned int; // probably need s32
 
 struct Memory{
 	static constexpr u32 MAX_MEM = 1024 * 64;
@@ -84,6 +84,11 @@ struct CPU {
 		return loByte | (hiBYte << 8);
 	};
 
+	void writeByte(BYTE value, u32& cycles, WORD address, Memory& memory) {
+		memory[address] = value;
+		cycles--;
+	};
+
 	static constexpr BYTE
 		INS_LDA_IM = 0xA9,
 		INS_LDA_ZP = 0xA5,
@@ -105,6 +110,20 @@ struct CPU {
 		INS_LDY_ZPX = 0xB4,
 		INS_LDY_ABS = 0xAC,
 		INS_LDY_ABSX = 0xBC,
+
+		INS_STA_ZP = 0x85,
+		INS_STA_ZPX = 0x95,
+		INS_STA_ABS = 0x8D,
+		INS_STA_ABSX = 0x9D,
+		INS_STA_ABSY = 0x99,
+		INS_STA_INDX = 0x81,
+
+		INS_STX_ZP = 0x86,
+		INS_STX_ABS = 0x9E,
+
+		INS_STY_ZP = 0x84,
+		INS_STY_ZPX = 0x94,
+		INS_STY_ABS = 0x8C,
 
 		INS_JSR = 0x20;
 
@@ -253,6 +272,18 @@ struct CPU {
 					};
 					A = readByte(cycles, effectiveAddressY, mem);
 					loadRegisterSetStatus(A);
+				} break;
+				case INS_STA_ZP: {
+					WORD zeroPageAddress = addressZeroPage(cycles, mem);
+					writeByte(A, cycles, zeroPageAddress, mem);
+				} break;
+				case INS_STX_ZP: {
+					WORD zeroPageAddress = addressZeroPage(cycles, mem);
+					writeByte(X, cycles, zeroPageAddress, mem);
+				} break;
+				case INS_STY_ZP: {
+					WORD zeroPageAddress = addressZeroPage(cycles, mem);
+					writeByte(Y, cycles, zeroPageAddress, mem);
 				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
