@@ -117,6 +117,7 @@ struct CPU {
 		INS_STA_ABSX = 0x9D,
 		INS_STA_ABSY = 0x99,
 		INS_STA_INDX = 0x81,
+		INS_STA_INDY = 0x91,
 
 		INS_STX_ZP = 0x86,
 		INS_STX_ABS = 0x9E,
@@ -172,6 +173,24 @@ struct CPU {
 			cycles--;
 		};
 		return absAddressY;
+	};
+
+	WORD addressIndirectX(u32& cycles, Memory& memory) {
+		BYTE zeroPageAddress = fetch(cycles, memory);
+		zeroPageAddress += X;
+		cycles--;
+		WORD effectiveAddress = readWord(cycles, zeroPageAddress, memory);
+		return effectiveAddress;
+	};
+
+	WORD addressIndirectY(u32& cycles, Memory& memory) {
+		BYTE zeroPageAddress = fetch(cycles, memory);
+		WORD effectiveAddress = readWord(cycles, zeroPageAddress, memory);
+		WORD effectiveAddressY = effectiveAddress + Y;
+		if (effectiveAddressY - effectiveAddress >= 0xFF) {
+			cycles--;
+		};
+		return effectiveAddressY;
 	};
 
 	void execute(u32 cycles, Memory& mem) {
@@ -256,20 +275,12 @@ struct CPU {
 					loadRegisterSetStatus(X);
 				} break;
 				case INS_LDA_INDX: {
-					BYTE zeroPageAddress = fetch(cycles, mem);
-					zeroPageAddress += X;
-					cycles--;
-					WORD effectiveAddress = readWord(cycles, zeroPageAddress, mem);
+					WORD effectiveAddress = addressIndirectX(cycles, mem);
 					A = readByte(cycles, effectiveAddress, mem);
 					loadRegisterSetStatus(A);
 				} break;
 				case INS_LDA_INDY: {
-					BYTE zeroPageAddress = fetch(cycles, mem);
-					WORD effectiveAddress = readWord(cycles, zeroPageAddress, mem);
-					WORD effectiveAddressY = effectiveAddress + Y;
-					if (effectiveAddressY - effectiveAddress >= 0xFF) {
-						cycles--;
-					};
+					WORD effectiveAddressY = addressIndirectY(cycles, mem);
 					A = readByte(cycles, effectiveAddressY, mem);
 					loadRegisterSetStatus(A);
 				} break;
@@ -313,6 +324,15 @@ struct CPU {
 				case INS_STA_ABSY: {
 					WORD address = addressAbsoluteY(cycles, mem);
 					writeByte(A, cycles, address, mem);
+					cycles--;
+				} break;
+				case INS_STA_INDX: {
+					WORD effectiveAddress = addressIndirectX(cycles, mem);
+					writeByte(A, cycles, effectiveAddress, mem);
+				} break;
+				case INS_STA_INDY: {
+					WORD effectiveAddressY = addressIndirectY(cycles, mem);
+					writeByte(A, cycles, effectiveAddressY, mem);
 					cycles--;
 				} break;
 				case INS_JSR: {
