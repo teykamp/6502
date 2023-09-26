@@ -18,12 +18,6 @@ struct Memory{
 	BYTE& operator[](u32 address) {
 		return data[address];
 	};
-
-	void writeWord(u32& cycles, WORD value, u32 address) {
-		data[address] = value & 0xFF;
-		data[address + 1] = (value >> 8);
-		cycles -= 2;
-	};
 };
 
 struct CPU {
@@ -87,6 +81,12 @@ struct CPU {
 	void writeByte(BYTE value, u32& cycles, WORD address, Memory& memory) {
 		memory[address] = value;
 		cycles--;
+	};
+
+	void writeWord(u32& cycles, WORD value, WORD address, Memory& memory) {
+		memory[address] = value & 0xFF;
+		memory[address + 1] = (value >> 8);
+		cycles -= 2;
 	};
 
 	static constexpr BYTE
@@ -337,7 +337,7 @@ struct CPU {
 				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
-					mem.writeWord(cycles, PC - 1, SP);
+					writeWord(cycles, PC - 1, SP, mem);
 					SP += 2;
 					PC = subAddress;
 					cycles--;
