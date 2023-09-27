@@ -165,6 +165,13 @@ struct CPU {
 		};
 		return absAddressX;
 	};
+	
+	WORD addressAbsoluteX_5(u32& cycles, Memory& memory) {
+		WORD absAddress = fetchWord(cycles, memory);
+		WORD absAddressX = absAddress + X;
+		cycles--;
+		return absAddressX;
+	};
 
 	WORD addressAbsoluteY(u32& cycles, Memory& memory) {
 		WORD absAddress = fetchWord(cycles, memory);
@@ -172,6 +179,13 @@ struct CPU {
 		if (absAddressY - absAddress >= 0xFF) {
 			cycles--;
 		};
+		return absAddressY;
+	};
+
+	WORD addressAbsoluteY_5(u32& cycles, Memory& memory) {
+		WORD absAddress = fetchWord(cycles, memory);
+		WORD absAddressY = absAddress + Y;
+		cycles--;
 		return absAddressY;
 	};
 
@@ -190,6 +204,14 @@ struct CPU {
 		if (effectiveAddressY - effectiveAddress >= 0xFF) {
 			cycles--;
 		};
+		return effectiveAddressY;
+	};
+	
+	WORD addressIndirectY_6(u32& cycles, Memory& memory) {
+		BYTE zeroPageAddress = fetch(cycles, memory);
+		WORD effectiveAddress = readWord(cycles, zeroPageAddress, memory);
+		WORD effectiveAddressY = effectiveAddress + Y;
+		cycles--;
 		return effectiveAddressY;
 	};
 
@@ -317,23 +339,20 @@ struct CPU {
 					writeByte(Y, cycles, zeroPageAddress, mem);
 				} break;
 				case INS_STA_ABSX: {
-					WORD address = addressAbsoluteX(cycles, mem);
+					WORD address = addressAbsoluteX_5(cycles, mem);
 					writeByte(A, cycles, address, mem);
-					cycles--;
 				} break;
 				case INS_STA_ABSY: {
-					WORD address = addressAbsoluteY(cycles, mem);
+					WORD address = addressAbsoluteY_5(cycles, mem);
 					writeByte(A, cycles, address, mem);
-					cycles--;
 				} break;
 				case INS_STA_INDX: {
 					WORD effectiveAddress = addressIndirectX(cycles, mem);
 					writeByte(A, cycles, effectiveAddress, mem);
 				} break;
 				case INS_STA_INDY: {
-					WORD effectiveAddressY = addressIndirectY(cycles, mem);
+					WORD effectiveAddressY = addressIndirectY_6(cycles, mem);
 					writeByte(A, cycles, effectiveAddressY, mem);
-					cycles--;
 				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
