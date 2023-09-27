@@ -23,7 +23,7 @@ struct Memory{
 struct CPU {
 
 	WORD PC; // program counter
-	WORD SP; // stack pointer
+	BYTE SP; // stack pointer
 
 	BYTE A, X, Y; // registers
 
@@ -35,9 +35,9 @@ struct CPU {
 	BYTE V : 1; // overflow flag
 	BYTE N : 1; // negative flag
 
-	void reset(Memory& mem) {
-		PC = 0xFFFC;
-		SP = 0x0100;
+	void reset(WORD resetVector, Memory& mem) {
+		PC = resetVector;
+		SP = 0xFF;
 		C = Z = I = D = B = V = N = 0;
 		A = X = Y = 0;
 		mem.initialize();
@@ -89,6 +89,22 @@ struct CPU {
 		cycles -= 2;
 	};
 
+	WORD stackPointerToAddress() const {
+		return 0x100 | SP;
+	};
+
+	void pushStack(u32& cycles, Memory& memory) {
+		writeWord(cycles, PC - 1, stackPointerToAddress() - 1, memory);
+		SP -= 2;
+	};
+
+	WORD popFromStack(u32& cycles, Memory& memory) {
+		WORD value = readWord(cycles, stackPointerToAddress() + 1, memory);
+		SP += 2;
+		cycles--;
+		return value;
+	};
+
 	static constexpr BYTE
 		INS_LDA_IM = 0xA9,
 		INS_LDA_ZP = 0xA5,
@@ -126,7 +142,8 @@ struct CPU {
 		INS_STY_ZPX = 0x94,
 		INS_STY_ABS = 0x8C,
 
-		INS_JSR = 0x20;
+		INS_JSR = 0x20,
+		INS_RTS = 0x60;
 
 	void loadRegisterSetStatus(BYTE reg) {
 		Z = (reg == 0);
@@ -356,10 +373,14 @@ struct CPU {
 				} break;
 				case INS_JSR: {
 					WORD subAddress = fetchWord(cycles, mem);
-					writeWord(cycles, PC - 1, SP, mem);
-					SP += 2;
+					pushStack(cycles, mem);
 					PC = subAddress;
 					cycles--;
+				} break;
+				case INS_RTS: {
+					WORD returnAddress = popFromStack(cycles, mem);
+					PC = returnAddress + 1;
+					cycles -= 2 ;
 				} break;
 				default: {
 					printf("Instruction not handled: ", insion);
@@ -372,7 +393,7 @@ struct CPU {
 int main() {
 	Memory mem;
 	CPU cpu;
-	cpu.reset(mem);
+	cpu.reset(0xFF00, mem);
 
 	mem[0xFFFC] = CPU::INS_JSR;
 	mem[0xFFFD] = 0x42;
