@@ -5,7 +5,7 @@ using BYTE = unsigned char;
 using WORD = unsigned short;
 using u32 = unsigned int; // probably need s32
 
-struct Memory{
+struct Memory {
 	static constexpr u32 MAX_MEM = 1024 * 64;
 	BYTE data[MAX_MEM];
 
@@ -20,6 +20,17 @@ struct Memory{
 	};
 };
 
+struct StatusFlags {
+	BYTE C : 1; // carry flag
+	BYTE Z : 1; // zero flag
+	BYTE I : 1; // interrupt disable
+	BYTE D : 1; // decimal mode
+	BYTE B : 1; // break command
+	BYTE unused : 1; // in CPU, does not get used
+	BYTE V : 1; // overflow flag
+	BYTE N : 1; // negative flag
+};
+
 struct CPU {
 
 	WORD PC; // program counter
@@ -27,18 +38,16 @@ struct CPU {
 
 	BYTE A, X, Y; // registers
 
-	BYTE C : 1; // carry flag
-	BYTE Z : 1; // zero flag
-	BYTE I : 1; // interrupt disable
-	BYTE D : 1; // decimal mode
-	BYTE B : 1; // break command
-	BYTE V : 1; // overflow flag
-	BYTE N : 1; // negative flag
+	union {
+		BYTE PS;
+		StatusFlags flag;
+	};
+
 
 	void reset(WORD resetVector, Memory& mem) {
 		PC = resetVector;
 		SP = 0xFF;
-		C = Z = I = D = B = V = N = 0;
+		flag.C = flag.Z = flag.I = flag.D = flag.B = flag.V = flag.N = 0;
 		A = X = Y = 0;
 		mem.initialize();
 	};
@@ -146,8 +155,8 @@ struct CPU {
 		INS_RTS = 0x60;
 
 	void loadRegisterSetStatus(BYTE reg) {
-		Z = (reg == 0);
-		N = (reg & 0b10000000) > 0;
+		flag.Z = (reg == 0);
+		flag.N = (reg & 0b10000000) > 0;
 	};
 
 	WORD addressZeroPage(u32& cycles, Memory& memory) {
