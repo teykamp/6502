@@ -151,6 +151,8 @@ struct CPU {
 		INS_STY_ZPX = 0x94,
 		INS_STY_ABS = 0x8C,
 
+		INS_JMP_ABS = 0x4C,
+		INS_JMP_IND = 0x6C,
 		INS_JSR = 0x20,
 		INS_RTS = 0x60;
 
@@ -390,6 +392,15 @@ struct CPU {
 					WORD returnAddress = popFromStack(cycles, mem);
 					PC = returnAddress + 1;
 					cycles -= 2 ;
+				} break;
+				case INS_JMP_ABS: {
+					WORD absAddress = addressAbsolute(cycles, mem);
+					PC = absAddress;
+				} break;
+				case INS_JMP_IND: {
+					WORD absAddress = addressAbsolute(cycles, mem);
+					absAddress = readWord(cycles, absAddress, mem);
+					PC = absAddress;
 				} break;
 				default: {
 					printf("Instruction not handled: ", insion);
