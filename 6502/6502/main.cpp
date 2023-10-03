@@ -113,6 +113,13 @@ struct CPU {
 		cycles--;
 		return value;
 	};
+	
+	void pushByteOntoStack(u32& cycles, BYTE value, Memory& memory) {
+		memory[stackPointerToAddress()] = value;
+		cycles--;
+		SP--;
+		cycles--;
+	};
 
 	static constexpr BYTE
 		INS_LDA_IM = 0xA9,
@@ -153,6 +160,7 @@ struct CPU {
 
 		INS_TSX = 0xBA,
 		INS_TXS = 0x9A,
+		INS_PHA = 0x48,
 
 		INS_JMP_ABS = 0x4C,
 		INS_JMP_IND = 0x6C,
@@ -413,6 +421,9 @@ struct CPU {
 				case INS_TXS: {
 					SP = X;
 					cycles--;
+				} break;
+				case INS_PHA: {
+					pushByteOntoStack(cycles, A, mem);
 				} break;
 				default: {
 					printf("Instruction not handled: ", insion);
