@@ -152,6 +152,7 @@ struct CPU {
 		INS_STY_ABS = 0x8C,
 
 		INS_TSX = 0xBA,
+		INS_TXS = 0x9A,
 
 		INS_JMP_ABS = 0x4C,
 		INS_JMP_IND = 0x6C,
@@ -408,6 +409,10 @@ struct CPU {
 					X = SP;
 					cycles--;
 					loadRegisterSetStatus(X);
+				} break;
+				case INS_TXS: {
+					SP = X;
+					cycles--;
 				} break;
 				default: {
 					printf("Instruction not handled: ", insion);
