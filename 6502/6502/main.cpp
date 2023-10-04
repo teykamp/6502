@@ -442,6 +442,9 @@ struct CPU {
 					A = popByteFromStack(cycles, mem);
 					loadRegisterSetStatus(A);
 				} break;
+				case INS_PLP: {
+					PS = popByteFromStack(cycles, mem);
+				} break;
 				default: {
 					printf("Instruction not handled: ", insion);
 				} break;
