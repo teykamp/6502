@@ -170,6 +170,7 @@ struct CPU {
 		INS_PHA = 0x48,
 		INS_PHP = 0x08,
 		INS_PLA = 0x68,
+		INS_PLP = 0x25,
 
 		INS_JMP_ABS = 0x4C,
 		INS_JMP_IND = 0x6C,
@@ -438,7 +439,8 @@ struct CPU {
 					pushByteOntoStack(cycles, PS, mem);
 				} break;
 				case INS_PLA: {
-					popByteFromStack(cycles, mem);
+					A = popByteFromStack(cycles, mem);
+					loadRegisterSetStatus(A);
 				} break;
 				default: {
 					printf("Instruction not handled: ", insion);
