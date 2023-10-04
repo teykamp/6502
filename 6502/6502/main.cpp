@@ -161,6 +161,7 @@ struct CPU {
 		INS_TSX = 0xBA,
 		INS_TXS = 0x9A,
 		INS_PHA = 0x48,
+		INS_PHP = 0x08,
 
 		INS_JMP_ABS = 0x4C,
 		INS_JMP_IND = 0x6C,
@@ -424,6 +425,9 @@ struct CPU {
 				} break;
 				case INS_PHA: {
 					pushByteOntoStack(cycles, A, mem);
+				} break;
+				case INS_PHP: {
+					pushByteOntoStack(cycles, PS, mem);
 				} break;
 				default: {
 					printf("Instruction not handled: ", insion);
