@@ -295,6 +295,14 @@ struct CPU {
 			A &= readByte(cycles, address, mem);
 			loadRegisterSetStatus(A);
 		};
+		auto ora = [&cycles, &mem, this](WORD address) {
+			A |= readByte(cycles, address, mem);
+			loadRegisterSetStatus(A);
+		};
+		auto eor = [&cycles, &mem, this](WORD address) {
+			A ^= readByte(cycles, address, mem);
+			loadRegisterSetStatus(A);
+		};
 
 		while (cycles > 0) {
 			BYTE insion = fetch(cycles, mem);
@@ -314,6 +322,14 @@ struct CPU {
 				case INS_AND_ZP: {
 					WORD address = addressZeroPage(cycles, mem);
 					and(address);
+				} break;
+				case INS_ORA_ZP: {
+					WORD address = addressZeroPage(cycles, mem);
+					ora(address);
+				} break;
+				case INS_EOR_ZP: {
+					WORD address = addressZeroPage(cycles, mem);
+					eor(address);
 				} break;
 				case INS_LDA_IM: {
 					A = fetch(cycles, mem);
