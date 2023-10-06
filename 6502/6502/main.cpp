@@ -298,6 +298,14 @@ struct CPU {
 					A &= fetch(cycles, mem);
 					loadRegisterSetStatus(A);
 				} break;
+				case INS_ORA_IM: {
+					A |= fetch(cycles, mem);
+					loadRegisterSetStatus(A);
+				} break;
+				case INS_EOR_IM: {
+					A ^= fetch(cycles, mem);
+					loadRegisterSetStatus(A);
+				} break;
 				case INS_LDA_IM: {
 					A = fetch(cycles, mem);
 					loadRegisterSetStatus(A);
