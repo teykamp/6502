@@ -291,6 +291,11 @@ struct CPU {
 	};
 
 	void execute(u32 cycles, Memory& mem) {
+		auto and = [&cycles, &mem, this](WORD address) {
+			A &= readByte(cycles, address, mem);
+			loadRegisterSetStatus(A);
+		};
+
 		while (cycles > 0) {
 			BYTE insion = fetch(cycles, mem);
 			switch (insion) {
@@ -305,6 +310,10 @@ struct CPU {
 				case INS_EOR_IM: {
 					A ^= fetch(cycles, mem);
 					loadRegisterSetStatus(A);
+				} break;
+				case INS_AND_ZP: {
+					WORD address = addressZeroPage(cycles, mem);
+					and(address);
 				} break;
 				case INS_LDA_IM: {
 					A = fetch(cycles, mem);
