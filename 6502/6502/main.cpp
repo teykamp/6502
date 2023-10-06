@@ -294,6 +294,10 @@ struct CPU {
 		while (cycles > 0) {
 			BYTE insion = fetch(cycles, mem);
 			switch (insion) {
+				case INS_AND_IM: {
+					A &= fetch(cycles, mem);
+					loadRegisterSetStatus(A);
+				} break;
 				case INS_LDA_IM: {
 					A = fetch(cycles, mem);
 					loadRegisterSetStatus(A);
